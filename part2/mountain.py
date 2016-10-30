@@ -2,7 +2,6 @@
 #
 # Mountain ridge finder
 # Based on skeleton code by D. Crandall, Oct 2016
-#
 
 from PIL import Image
 from numpy import *
