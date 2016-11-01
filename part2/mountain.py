@@ -33,18 +33,18 @@ def draw_edge(image, y_coordinates, color, thickness):
 
 # main program
 #
-(input_filename, output_filename, gt_row, gt_col) = sys.argv[1:]
+(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain9.jpg','test_images/output.jpg', 3, 4)
 
 # load in image 
 input_image = Image.open(input_filename)
 
 # compute edge strength mask
 edge_strength = edge_strength(input_image)
+row_index = edge_strength.argmax(axis=0)
 imsave('edges.jpg', edge_strength)
 
 # You'll need to add code here to figure out the results! For now,
 # just create a horizontal centered line.
-ridge = [ edge_strength.shape[0]/2 ] * edge_strength.shape[1]
-
+ridge = row_index
 # output answer
 imsave(output_filename, draw_edge(input_image, ridge, (255, 0, 0), 5))
