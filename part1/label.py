@@ -46,7 +46,7 @@ test_data = read_data(test_file)
 
 print "Testing classifiers..."
 scorer = Score()
-Algorithms = ("Simplified", "HMM", "Complex")
+Algorithms = ("Simplified", "HMM","Complex")
 for (s, gt) in test_data:
     outputs = {"0. Ground truth" : [[gt,], []]}
 
