@@ -6,7 +6,7 @@ print min(array.argsort()[-3:])
 '''
 def lowerRows(edgeStrength):
     array = np.asarray(edgeStrength)
-    topValues = array.argsort()[-45:]
+    topValues = array.argsort()[-20:]
     return min(topValues), topValues
 
 def adjacentCols(prevCol, nextCol):

@@ -8,6 +8,8 @@ from numpy import *
 from scipy.ndimage import filters
 from scipy.misc import imsave
 from heuristics import *
+import random
+from copy import deepcopy
 
 import sys
 
@@ -35,13 +37,14 @@ def draw_edge(image, y_coordinates, color, thickness):
 
 # main program
 #
-(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain7.jpg','test_images/output.jpg', 3, 4)
+(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain5.jpg','test_images/output.jpg', 3, 4)
 
 # load in image 
 input_image = Image.open(input_filename)
 
 # compute edge strength mask
 edge_strength = edge_strength(input_image)
+edgeStrength = deepcopy(edge_strength)
 row_index = edge_strength.argmax(axis=0)
 imsave('edges.jpg', edge_strength)
 '''
@@ -76,8 +79,6 @@ for i in range(len(edge_strength[0])):
 
 probabilityMatrix = transpose(totalMatrix)
 
-probCounter = []
-finalRidgeList = []
 '''
 for i in range(len(topEdgeVals)):
     for j in range(len(topEdgeVals[i])):
@@ -85,9 +86,6 @@ for i in range(len(topEdgeVals)):
             #for ctr1 in range(len(probabilityMatrix[i+1])):
             print topEdgeVals[i][j], i+1, j, probabilityMatrix[i+1][j]
 '''
-finalRidgeList.append(topEdgeVals[0][0])
-probCounter.append(0)
-
 
 def calcSamples(colNo, topEdgeVals):
     for eachVal in topEdgeVals:
@@ -105,24 +103,26 @@ returnedVal = calcSamples(1, topEdgeVals[0])
 
 def bestReturnedVals(values):
     values.sort(key=lambda tup: tup[1])
-    return values[-45:]
+    return values[-20:]
 
-for i in range(2,len(edge_strength[0])):
-    bestVals = bestReturnedVals(returnedVal)
-    returnedVal = calcSamples(i, bestVals)
-    finalRidgeList.append(bestVals[-1][0])
-    probCounter.append(bestVals[-1][2])
+T = 10
 
-allPossibleRidges = ((finalRidgeList, sum(probCounter)),)
-print allPossibleRidges
-T = len(edge_strength)
+allPossibleRidges = []
 
-#for i in range(1, T):
+for t in range(1, T):
+    finalRidgeList = []
+    probCounter = []
+    finalRidgeList.append(topEdgeVals[0][random.randint(0,19)])
+    probCounter.append(0)
+    if t != 1:
+        returnedVal = calcSamples(1, topEdgeVals[0])
+    for i in range(2, len(edge_strength[0])):
+        bestVals = bestReturnedVals(returnedVal)
+        returnedVal = calcSamples(i, bestVals)
+        finalRidgeList.append(bestVals[-1][0])
+        probCounter.append(bestVals[-1][2])
 
-
-
-
-
+    allPossibleRidges.append((finalRidgeList, sum(probCounter)))
 
 '''
 for i in range(len(probabilityMatrix)):
@@ -138,6 +138,9 @@ for i in range(len(probabilityMatrix)):
                 nextState.append(eachrow[i + 1])
                 dist(currentState, nextState)
 '''
+
+allPossibleRidges.sort(key=lambda tup: tup[1])
+finalRidgeList = allPossibleRidges[-1][0]
 
 # You'll need to add code here to figure out the results! For now,
 # just create a horizontal centered line.
