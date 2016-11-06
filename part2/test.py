@@ -1,5 +1,27 @@
-elements = [[1,2,3], [4,5,6], [7,8,9]]
+probabilityMatrix = [[0.5,0.6,0.7,0.8],[0.1,0.8,0.7,0.9],[0.1,0.2,0.3,0.1]]
 
-maxIntEl = max(int(element[1]) for element in elements)
 
-print maxIntEl
+
+
+def calcSamples(colNo, topEdgeVals):
+    for eachVal in topEdgeVals:
+        topEdgeVals1 = []
+        for i in range(len(probabilityMatrix)):
+            topEdgeVals1.append(i)
+            print eachVal, probabilityMatrix[i][colNo]
+    return topEdgeVals1
+
+
+returnedVal = calcSamples(1, [1,2])
+print returnedVal
+
+for i in range(2,4):
+    returnedVal = calcSamples(i, returnedVal[:2])
+
+a = [(1, 10),(2, 6)]
+
+a.sort(key=lambda tup: tup[1])
+
+print a
+
+print type(a[0]) is tuple
