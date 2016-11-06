@@ -37,26 +37,23 @@ def draw_edge(image, y_coordinates, color, thickness):
 
 # main program
 #
-(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain5.jpg','test_images/output.jpg', 3, 4)
+(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain9.jpg','test_images/output.jpg', 3, 4)
 
-# load in image 
+# load in image
 input_image = Image.open(input_filename)
 
 # compute edge strength mask
 edge_strength = edge_strength(input_image)
 edgeStrength = deepcopy(edge_strength)
+modifiedEdgeStrength = removeUseless(edgeStrength, int(len(edgeStrength) - round(0.2 * len(edgeStrength))))
+
 row_index = edge_strength.argmax(axis=0)
 imsave('edges.jpg', edge_strength)
-'''
-for i in range(len(edge_strength)):
-    for j in range(len(edge_strength[i])):
-        print i, j, "   ", edge_strength[i][j]
-'''
 minParameters = []
 topEdgeVals = []
-for i in range(len(edge_strength[0])):
+for i in range(len(modifiedEdgeStrength[0])):
     colState = []
-    for eachrow in edge_strength:
+    for eachrow in modifiedEdgeStrength:
         colState.append(eachrow[i])
     minMaxEdgeWeight, topVals = lowerRows(colState)
     minParameters.append(minMaxEdgeWeight)
@@ -64,20 +61,21 @@ for i in range(len(edge_strength[0])):
 
 for i in range(len(topEdgeVals)):
     colState = []
-    for eachrow in edge_strength:
+    for eachrow in modifiedEdgeStrength:
         colState.append(eachrow[i])
 
 totalMatrix = []
-for i in range(len(edge_strength[0])):
+for i in range(len(modifiedEdgeStrength[0])):
     eachCol = []
     columnValues = []
-    for eachrow in edge_strength:
+    for eachrow in modifiedEdgeStrength:
         columnValues.append(eachrow[i])
     for j in range(len(columnValues)):
         eachCol.append(columnValues[j]/sum(columnValues))
     totalMatrix.append(eachCol)
 
 probabilityMatrix = transpose(totalMatrix)
+modifiedProbStrength = removeUseless(probabilityMatrix, int(len(probabilityMatrix) - round(0.2 * len(probabilityMatrix))))
 
 '''
 for i in range(len(topEdgeVals)):
@@ -90,20 +88,20 @@ for i in range(len(topEdgeVals)):
 def calcSamples(colNo, topEdgeVals):
     for eachVal in topEdgeVals:
         topEdgeVals1 = []
-        for i in range(len(probabilityMatrix)):
+        for i in range(len(modifiedProbStrength)):
             if type(eachVal) is tuple:
                 topEdgeVals1.append(
-                    (i, formulaToCalculate(probabilityMatrix[i][colNo], len(edge_strength), abs(eachVal[0] - i)), probabilityMatrix[i][colNo]))
+                    (i, formulaToCalculate(modifiedProbStrength[i][colNo], len(modifiedEdgeStrength), abs(eachVal[0] - i)), modifiedProbStrength[i][colNo]))
             else:
                 topEdgeVals1.append(
-                    (i, formulaToCalculate(probabilityMatrix[i][colNo], len(edge_strength), abs(eachVal - i)), probabilityMatrix[i][colNo]))
+                    (i, formulaToCalculate(modifiedProbStrength[i][colNo], len(modifiedEdgeStrength), abs(eachVal - i)), modifiedProbStrength[i][colNo]))
     return topEdgeVals1
 
 returnedVal = calcSamples(1, topEdgeVals[0])
 
 def bestReturnedVals(values):
     values.sort(key=lambda tup: tup[1])
-    return values[-20:]
+    return values[-10:]
 
 T = 10
 
@@ -112,32 +110,17 @@ allPossibleRidges = []
 for t in range(1, T):
     finalRidgeList = []
     probCounter = []
-    finalRidgeList.append(topEdgeVals[0][random.randint(0,19)])
+    finalRidgeList.append(topEdgeVals[0][0])
     probCounter.append(0)
     if t != 1:
         returnedVal = calcSamples(1, topEdgeVals[0])
-    for i in range(2, len(edge_strength[0])):
+    for i in range(2, len(modifiedEdgeStrength[0])):
         bestVals = bestReturnedVals(returnedVal)
         returnedVal = calcSamples(i, bestVals)
         finalRidgeList.append(bestVals[-1][0])
         probCounter.append(bestVals[-1][2])
 
     allPossibleRidges.append((finalRidgeList, sum(probCounter)))
-
-'''
-for i in range(len(probabilityMatrix)):
-    for j in range(len(probabilityMatrix[i])):
-'''
-
-
-
-'''
-        if i + 1 < len(edge_strength[0]):
-            currentState = eachrow[i]
-            for eachNextRow in edge_strength:
-                nextState.append(eachrow[i + 1])
-                dist(currentState, nextState)
-'''
 
 allPossibleRidges.sort(key=lambda tup: tup[1])
 finalRidgeList = allPossibleRidges[-1][0]

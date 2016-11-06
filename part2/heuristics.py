@@ -20,9 +20,11 @@ def dist(var1, list2):
     print var1
     for item in list2:
         print item
-    print "--------"
 
 
 def formulaToCalculate(probScore, numberofRows, rowDiff):
     return (probScore * numberofRows) / (1 + rowDiff)
+
+def removeUseless(matrix, limit):
+    return matrix[:limit]
 
