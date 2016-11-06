@@ -23,6 +23,14 @@ from collections import defaultdict
 # make sure your code still works with the label.py and pos_scorer.py code
 # that we've supplied.
 #
+def find_log_prob(count, total):
+    return math.log(float(count) / total)
+
+
+def find_prob(a, b):
+    return float(a) / b
+
+
 class Solver:
     tokTags = defaultdict(Counter)
     tags = Counter()
@@ -30,12 +38,29 @@ class Solver:
     tagTagTags = defaultdict()
     tagCount = 0
     iv = Counter()
+    round_places = 4
 
     # Calculate the log of the posterior probability of a given sentence
     #  with a given part-of-speech labeling
-    # TODO: THis is P(Sentence/POS tags)
     def posterior(self, sentence, label):
-        return 0  # TODO: Find the Log of the posterior probability
+        p = 0
+        for i in range(len(label)):
+            word = sentence[i]
+            tag = label[i]
+            p += self.calc_posterior(word, tag)
+
+        return p
+
+    def calc_posterior(self, word, tag):
+        t_w = self.emission_probability(word, tag)
+        if t_w == 0:
+            t_w = 0.000000001
+        w = find_prob(self.get_word_count(word), self.tagCount)
+        t = self.find_tag_prob(tag)
+        res = (t_w * w) / t
+        if res == 0:
+            print word, tag
+        return math.log(res)
 
     # Do the training!
     #
@@ -44,13 +69,19 @@ class Solver:
         for tup in data:
             words = tup[0]
             pos_tags = tup[1]
+            # Store the word/tag count
             self.tagCount += len(pos_tags)
             for i in range(len(words)):
+                # token - word count
                 self.tokTags[words[i]][pos_tags[i]] += 1
+                # store tag count
                 self.tags[pos_tags[i]] += 1
             self.iv[pos_tags[0]] += 1
             for j in range(1, len(pos_tags)):
+                # tag[j] given tag[j-1]
                 self.tagTags[pos_tags[j]][pos_tags[j - 1]] += 1
+
+            # tag[j] given tag[j-1] and tag[j-2]
             for k in range(2, len(pos_tags)):
                 tag = pos_tags[k]
                 prev_tag = pos_tags[k - 1]
@@ -68,16 +99,18 @@ class Solver:
 
                 self.tagTagTags[tag][prev_tag][prev_prev_tag] += 1
 
+        # Training Done!
         return True
 
     def get_simplified_tag_prob(self, word):
         if word not in self.tokTags:
-            return "noun", 0
+            # Tag unknown words as noun with low confidence
+            return "noun", 1.0 / 12
         counter = self.tokTags[word]
         max_tag = counter.most_common(1)[0][0]
-        word_tag = self.find_prob(counter[max_tag], sum(counter.values()))
+        word_tag = find_prob(counter[max_tag], sum(counter.values()))
 
-        return max_tag,word_tag
+        return max_tag, word_tag
 
     # Functions for each algorithm.
     #
@@ -87,20 +120,17 @@ class Solver:
         for word in sentence:
             tag, prob = self.get_simplified_tag_prob(word)
             tag_list.append(tag)
-            prob_list.append(round(prob,3))
-
+            prob_list.append(round(prob, self.round_places))
 
         return [[tag_list], [prob_list]]
 
-    def find_log_prob(self, count, total):
-        return math.log(float(count) / total)
-
+    # Get the probability based on the count in self.tagTags
     def transition_probability(self, cur_tag, prev_tag):
         count_tag = self.tagTags[cur_tag][prev_tag]
         total_count = sum(self.tagTags[cur_tag].values())
-        # total_count = self.tags[prev_tag]
         return float(count_tag) / total_count
 
+    # Helper for viterbi
     def find_max_prob(self, prev_tags, tag):
         prob_array = []
         for p_tag in prev_tags:
@@ -115,25 +145,25 @@ class Solver:
         return sum(self.tokTags[word].values())
 
     def get_possible_tags(self, word):
+        # Unknown words are labelled 'noun' intuitively
         if word not in self.tokTags:
             return ['noun']  # self.tags.keys()
         return self.tokTags[word].keys()
 
     def word_tag_count(self, word, tag):
         if word not in self.tokTags:
+            # if the word is not known, calculate relative probability of the tags
             return float(self.tags[tag]) / self.tagCount
         return self.tokTags[word][tag]
-
-    def find_prob(self, a, b):
-        return float(a) / b
 
     def find_tag_prob(self, tag):
         return float(self.tags[tag]) / self.tagCount
 
+    # Calculate emission probability based on self.tokTags
     def emission_probability(self, word, tag):
         wt_count = self.word_tag_count(word, tag)
         wc = self.get_word_count(word)
-        word_tag_prob = self.find_prob(wt_count, wc)
+        word_tag_prob = find_prob(wt_count, wc)
         # tag_prob = self.find_tag_prob(tag)
 
         return float(word_tag_prob)
@@ -144,10 +174,12 @@ class Solver:
         start_word = sentence[0]
         s_prob_count = sum(self.iv.values())
 
+        # Calculate for first word in the sentence based on IV
         possible_tags = self.get_possible_tags(start_word)
         for tag in possible_tags:
-            v[0][tag] = self.emission_probability(start_word, tag) * self.find_prob(self.iv[tag], s_prob_count)
+            v[0][tag] = self.emission_probability(start_word, tag) * find_prob(self.iv[tag], s_prob_count)
 
+        # Viterbi
         for i in range(1, len(sentence)):
             word = sentence[i]
             possible_tags = self.get_possible_tags(word)
@@ -157,9 +189,9 @@ class Solver:
 
         tag_list = [v[j].most_common(1)[0][0] for j in range(len(sentence))]
 
-
         return [[tag_list], []]
 
+    # Helper for the complex model which accounts for two steps behind
     def find_two_tag_max(self, data, index, tag):
         t2 = self.find_max_prob(data[index - 1].keys(), tag)[0]
         t1 = self.find_max_prob(data[index - 2].keys(), t2)[0]
@@ -169,35 +201,39 @@ class Solver:
             return float(self.tags[tag]) / self.tagCount  # 0.00000000001
         seq_tag_count = self.tagTagTags[tag][t2][t1]
 
-        return self.find_prob(float(seq_tag_count), tag_count)
+        return find_prob(float(seq_tag_count), tag_count)
 
     def complex(self, sentence):
         w = defaultdict(Counter)
         start_word = sentence[0]
         s_prob_count = sum(self.iv.values())
         possible_tags = self.get_possible_tags(start_word)
+        # Calculate for the first word based on IV
         for tag in possible_tags:
-            w[0][tag] = self.emission_probability(start_word,tag) * self.find_prob(self.iv[tag], s_prob_count)
+            w[0][tag] = self.emission_probability(start_word, tag) * find_prob(self.iv[tag], s_prob_count)
 
         prev_max = w[0].most_common(1)[0]
 
         if len(sentence) < 2:
-            return [[[prev_max[0]]], [[0]]]
+            return [[[prev_max[0]]], [[round(self.emission_probability(sentence[0], w[0].most_common(1)[0][0]), self.round_places)]]]
 
         second_word = sentence[1]
         possible_tags = self.get_possible_tags(second_word)
         for tag in possible_tags:
+            # Run a viterbi like model to find the second tag
             prev_tag, prev_prob = self.find_max_prob(w[0].keys(), tag)
-            w[1][tag] = self.emission_probability(second_word,tag) * prev_prob
+            w[1][tag] = self.emission_probability(second_word, tag) * prev_prob
 
+        # Enhanced viterbi to calculate pos for further words
         for i in range(2, len(sentence)):
             word = sentence[i]
             possible_tags = self.get_possible_tags(word)
             for tag in possible_tags:
-                w[i][tag] = self.emission_probability(word,tag) * self.find_two_tag_max(w, i, tag)
+                w[i][tag] = self.emission_probability(word, tag) * self.find_two_tag_max(w, i, tag)
 
         tag_list = [w[j].most_common(1)[0][0] for j in range(len(sentence))]
-        prob_list = [round(self.emission_probability(sentence[j], w[j].most_common(1)[0][0]),3) for j in range(len(sentence))]
+        prob_list = [round(self.emission_probability(sentence[j], w[j].most_common(1)[0][0]), self.round_places) for j
+                     in range(len(sentence))]
 
         return [[tag_list], [prob_list]]
 
