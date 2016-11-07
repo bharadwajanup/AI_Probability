@@ -11,7 +11,7 @@
 #
 # Put your report here!!
 
-#The train() method skims through the labelled corpus and creates data structures for:
+# The train() method skims through the labelled corpus and creates data structures for:
 #   tokTags    - This data structure has the count of a given word for a particular tag.
 #   tagTags    - This data structure will have the count for a given tag at position k to tags at position k-1.
 #   tagTagTags - This data structure will include the count for a given tag following a combination of previous two tags.
@@ -41,15 +41,20 @@
 #   In the Complex model, we not only calculate the initial probability but we also find the probability of second word using the information from the initial probability. We then modified the Viterbi's algorithm to accommodate the dependency created by previous two states.
 #   The resulting list of tags and their probabilities are then returned. We tried to work on an enhanced viterbi sequence which takes care of the tags at two steps behind in time.
 #
-#3) Assumptions and simplifications:
+# 3) Assumptions and simplifications:
 #   Going by intuition, we categorize every unknown word as a noun as they have the highest probability of appearing as unknown words from the training corpus. The word count for calculating emissions is set to 1.
 #   To further steer towards proper POS tagging of unknown words, we give relative probabilities of the tags w.r.t to how common they occur in the training.
 #   We give a small emission probability of 0.00000001 if the entry doesn't exist.
 #   In calculating the posterior probability, we assume the HMM model on all three Bayes Nets. The P(w) on the denominator is ignored to maximize the probability values.
 #
 #
-#4) Results:
-#
+# 4) Results:
+# ==> So far scored 2000 sentences with 29442 words.
+#                    Words correct:     Sentences correct:
+#    0. Ground truth:      100.00%              100.00%
+#      1. Simplified:       93.92%               47.45%
+#             2. HMM:       94.25%               49.35%
+#         3. Complex:       94.08%               48.00%
 ####
 
 
@@ -83,23 +88,24 @@ class Solver:
     # Calculate the log of the posterior probability of a given sentence
     #  with a given part-of-speech labeling
     def posterior(self, sentence, label):
-        emis = self.emission_probability(sentence[0],label[0])
+        emis = self.emission_probability(sentence[0], label[0])
         if emis == 0:
             emis = 0.000000001
 
         p = math.log(self.find_tag_prob(label[0]) * emis)
-        for i in range(1,len(label)):
+        for i in range(1, len(label)):
             word = sentence[i]
             tag = label[i]
-            trans = self.transition_probability(tag,label[i-1])
-            emis = self.emission_probability(word,tag)
+            trans = self.transition_probability(tag, label[i - 1])
+            emis = self.emission_probability(word, tag)
             if emis == 0:
                 emis = 0.000000001
             if trans == 0:
                 trans = 0.000000001
-            p += math.log( trans * emis)
+            p += math.log(trans * emis)
 
         return p
+
     # Do the training!
     #
     def train(self, data):
@@ -253,7 +259,8 @@ class Solver:
         prev_max = w[0].most_common(1)[0]
 
         if len(sentence) < 2:
-            return [[[prev_max[0]]], [[round(self.emission_probability(sentence[0], w[0].most_common(1)[0][0]), self.round_places)]]]
+            return [[[prev_max[0]]],
+                    [[round(self.emission_probability(sentence[0], w[0].most_common(1)[0][0]), self.round_places)]]]
 
         second_word = sentence[1]
         possible_tags = self.get_possible_tags(second_word)
