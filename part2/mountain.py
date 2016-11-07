@@ -2,6 +2,33 @@
 #
 # Mountain ridge finder
 # Based on skeleton code by D. Crandall, Oct 2016
+#1) Formulation and description:
+#        a) The simple model does not account the previous or the subsequent states. Hence we maximise the edge strength on each column and paint the image.
+#
+#        b) This method uses MCMC technique and HMMs. It used Formula being, (probScore * numberofRows) / (1 + rowDiff).
+#
+#        c) Based on the User feedback, We make use of the same technique as explained above and instead of searching for the column, It seacrhes
+#           +10 and -10 rows and goes on drawing the ridge.
+
+#2) Description of how the program works:
+#        a) We move through each column and find out the row value which has the highest value.
+#           This row value is then appended to a list 'ridge'. The final 'ridge' will have a list of all the row values, which is then passed to the draw_edge() function.
+#
+#        b) The program selects the top Edge Values and randomly selects a point and compares
+#           with each pixel in the next column. The program has been modeled with probability distribution and makes use of a formula defined by us to calculate probability score. 
+#           We then seelct top 20 scores and checks with next column and so on. 
+#
+#        c) Based on the User feedback, the program checks for +10 and -10 rows and the next or previous column.
+#
+#
+
+#3) Assumptions:
+#        a) We assume that for each column the row with the highest value as the point to draw the line.
+#
+#        b) Ridgeline won't appear at the bottom 20%. Functions can be found in heuristics.py file.
+#
+#        c) Same as the previous problem.
+#
 
 from PIL import Image
 from numpy import *
