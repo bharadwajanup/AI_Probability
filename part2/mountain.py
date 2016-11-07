@@ -64,6 +64,8 @@ def draw_edge(image, y_coordinates, color, thickness):
 # main program
 #
 (input_filename, output_filename, gt_row, gt_col) = sys.argv[1:]
+gt_row = int(gt_row)
+gt_col = int(gt_col)
 
 # load in image
 input_image = Image.open(input_filename)
