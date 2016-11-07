@@ -8,7 +8,6 @@ from numpy import *
 from scipy.ndimage import filters
 from scipy.misc import imsave
 from heuristics import *
-import random
 from copy import deepcopy
 
 import sys
@@ -37,7 +36,7 @@ def draw_edge(image, y_coordinates, color, thickness):
 
 # main program
 #
-(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain9.jpg','test_images/output.jpg', 3, 4)
+(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain.jpg','test_images/output.jpg', 33, 281)
 
 # load in image
 input_image = Image.open(input_filename)
@@ -46,11 +45,13 @@ input_image = Image.open(input_filename)
 edge_strength = edge_strength(input_image)
 edgeStrength = deepcopy(edge_strength)
 modifiedEdgeStrength = removeUseless(edgeStrength, int(len(edgeStrength) - round(0.2 * len(edgeStrength))))
-
+#part1
 row_index = edge_strength.argmax(axis=0)
 imsave('edges.jpg', edge_strength)
+#part-2
 minParameters = []
 topEdgeVals = []
+
 for i in range(len(modifiedEdgeStrength[0])):
     colState = []
     for eachrow in modifiedEdgeStrength:
@@ -77,13 +78,6 @@ for i in range(len(modifiedEdgeStrength[0])):
 probabilityMatrix = transpose(totalMatrix)
 modifiedProbStrength = removeUseless(probabilityMatrix, int(len(probabilityMatrix) - round(0.2 * len(probabilityMatrix))))
 
-'''
-for i in range(len(topEdgeVals)):
-    for j in range(len(topEdgeVals[i])):
-        if i < len(probabilityMatrix) - 1:
-            #for ctr1 in range(len(probabilityMatrix[i+1])):
-            print topEdgeVals[i][j], i+1, j, probabilityMatrix[i+1][j]
-'''
 
 def calcSamples(colNo, topEdgeVals):
     for eachVal in topEdgeVals:
@@ -125,9 +119,53 @@ for t in range(1, T):
 allPossibleRidges.sort(key=lambda tup: tup[1])
 finalRidgeList = allPossibleRidges[-1][0]
 
+#Part-3
+
+def drawRidge(rowNo, colNo):
+    try:
+        topRidgeVals = []
+        for i in range(rowNo - 10, rowNo + 10):
+            topRidgeVals.append(
+                (i, formulaToCalculate(modifiedProbStrength[i][colNo + 1], len(modifiedProbStrength), abs(rowNo - i))
+                 , modifiedProbStrength[i][colNo + 1]))
+        return topRidgeVals
+    except:
+        j = 1
+
+
+def drawRidgeNeg(rowNo, colNo):
+    try:
+        topRidgeVals = []
+        for i in range(rowNo - 10, rowNo + 10):
+            topRidgeVals.append(
+                (i, formulaToCalculate(modifiedProbStrength[i][colNo - 1], len(modifiedProbStrength), abs(rowNo - i))
+                 , modifiedProbStrength[i][colNo - 1]))
+        return topRidgeVals
+    except:
+        j = 1
+
+finalRidgeListUserDef = []
+probCounterUserDef = []
+retVal = drawRidgeNeg(gt_row, gt_col)
+for i in range(gt_col - 1, -1, -1):
+    bestVal = bestReturnedVals(retVal)
+    retVal = drawRidgeNeg(bestVal[-1][0], i)
+    finalRidgeListUserDef.append(bestVal[-1][0])
+    probCounterUserDef.append(bestVal[-1][2])
+
+finalRidgeListUserDef.reverse()
+finalRidgeListUserDef.append(gt_row)
+probCounterUserDef.append(0)
+
+for i in range(gt_col+1, len(modifiedEdgeStrength[0])):
+    bestVal = bestReturnedVals(returnedVal)
+    returnedVal = drawRidge(bestVals[-1][0], i)
+    finalRidgeListUserDef.append(bestVals[-1][0])
+    probCounterUserDef.append(bestVals[-1][2])
+
+
 # You'll need to add code here to figure out the results! For now,
 # just create a horizontal centered line.
-ridge = minParameters
-ridge = finalRidgeList
-# output answer
-imsave(output_filename, draw_edge(input_image, ridge, (0, 0, 255), 5))
+imsave(output_filename, draw_edge(input_image, row_index, (255, 0, 0), 5))
+imsave(output_filename, draw_edge(input_image, finalRidgeList, (0, 0, 255), 5))
+imsave(output_filename, draw_edge(input_image, finalRidgeListUserDef, (0, 255, 0), 5))

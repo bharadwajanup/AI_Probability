@@ -1,7 +1,8 @@
-probabilityMatrix = [[0.5,0.6,0.7,0.8],[0.1,0.8,0.7,0.9],[0.1,0.2,0.3,0.1],
-                     [0.1, 0.2, 0.3, 0.1], [0.1,0.2,0.3,0.1], [0.1,0.2,0.3,0.1],
-                     [0.1, 0.2, 0.3, 0.1], [0.1,0.2,0.3,0.1]]
+import numpy as np
 
+probabilityMatrix = np.array([[0.5,0.6,0.7,0.8],[0.1,0.8,0.7,0.9],[0.1,0.2,0.3,0.1],
+                     [0.1, 0.2, 0.3, 0.1], [0.1,0.2,0.3,0.1], [0.1,0.2,0.1,0.1],
+                     [0.1, 0.2, 0.2, 0.1], [0.1,0.2,0.4,0.1]])
 
 
 
@@ -37,4 +38,15 @@ for i in range(3):
 
 print tuple1
 
-print len(probabilityMatrix) - round(0.65 * len(probabilityMatrix))
+print len(probabilityMatrix) - int(round(0.65 * len(probabilityMatrix)))
+
+print int(round(0.2 * len(probabilityMatrix)))
+
+
+probabilityMatrix = probabilityMatrix[int(round(0.2 * len(probabilityMatrix))):]
+
+print probabilityMatrix
+
+a = [1,2,4,5,6]
+a.reverse()
+print a
