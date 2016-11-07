@@ -9,9 +9,49 @@
 # (Based on skeleton code by D. Crandall)
 #
 #
-####
 # Put your report here!!
+
+#The train() method skims through the labelled corpus and creates data structures for:
+#   tokTags    - This data structure has the count of a given word for a particular tag.
+#   tagTags    - This data structure will have the count for a given tag at position k to tags at position k-1.
+#   tagTagTags - This data structure will include the count for a given tag following a combination of previous two tags.
+#   iv         - This data structure will have the count of all the pos tags appearing at the start of the sentence.
+#
+# 1) Formulation and abstraction of Simple algorithm:
+#       Since the simple model does not count the dependence on the tags assigned to other words, we can model with a simple assumption that the tag which occurs the most
+#       will be the tag assigned to it. In other words, Each word in a sentence is assigned a tag, by taking the most commonly occurring tag for the given word.
+#
+#    Formulation and abstraction for HMM:
+#       With the HMM model of Bayes Net, we now have a transition dependence on the POS tags assigned for each word along with the initial probability vector and emission probabilities.
+#       By the definition of HMM, - The data stored in tagTags will aid us in calculating the transition probabilities, the data in tokTags will give us the emission probabilities and the IV is a dictionary
+#       separately maintained during training.
+#
+#    Formulation and abstraction of Complex algorithm:
+#       In this model, a tag can be dependent on the tags assigned to words at time t-1 and t-2. In order to accommodate that into our problem, we make use of tagtagtags dictionary counter to aid us in the necessary transition of tags.
+#       With this information, we try to assign POS tags for words by maximizing the states based on up to previous two states hoping to get better results.
+#
+#
+# 2) During training, the data is analyzed and the information is represented into 4 different data structures as explained above. This readily gives us the counts of a word with a certain tag, or tag at time t given another tag at time t-1
+#    or tag given tags at two steps behind. We used counters instead of dictionaries at some places to get an auto 0 if the key was never been found in the training.
+#
+#   In the simplified model, we simply pick the tag with the highest count for the given word, calculate the probability and return the list of tags and their probabilities.
+#
+#   In the HMM model, we first calculate the initial probability using the iv data structure. With the initial probability in our hand we calculate the further probabilities by using Viterbi's algorithm and then return a list of tags and their probabilities.
+#
+#   In the Complex model, we not only calculate the initial probability but we also find the probability of second word using the information from the initial probability. We then modified the Viterbi's algorithm to accommodate the dependency created by previous two states.
+#   The resulting list of tags and their probabilities are then returned. We tried to work on an enhanced viterbi sequence which takes care of the tags at two steps behind in time.
+#
+#3) Assumptions and simplifications:
+#   Going by intuition, we categorize every unknown word as a noun as they have the highest probability of appearing as unknown words from the training corpus. The word count for calculating emissions is set to 1.
+#   To further steer towards proper POS tagging of unknown words, we give relative probabilities of the tags w.r.t to how common they occur in the training.
+#   We give a small emission probability of 0.00000001 if the entry doesn't exist.
+#   In calculating the posterior probability, we assume the HMM model on all three Bayes Nets. The P(w) on the denominator is ignored to maximize the probability values.
+#
+#
+#4) Results:
+#
 ####
+
 
 
 import math
