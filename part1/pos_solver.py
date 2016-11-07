@@ -43,25 +43,23 @@ class Solver:
     # Calculate the log of the posterior probability of a given sentence
     #  with a given part-of-speech labeling
     def posterior(self, sentence, label):
-        p = 0
-        for i in range(len(label)):
+        emis = self.emission_probability(sentence[0],label[0])
+        if emis == 0:
+            emis = 0.000000001
+
+        p = math.log(self.find_tag_prob(label[0]) * emis)
+        for i in range(1,len(label)):
             word = sentence[i]
             tag = label[i]
-            p += self.calc_posterior(word, tag)
+            trans = self.transition_probability(tag,label[i-1])
+            emis = self.emission_probability(word,tag)
+            if emis == 0:
+                emis = 0.000000001
+            if trans == 0:
+                trans = 0.000000001
+            p += math.log( trans * emis)
 
         return p
-
-    def calc_posterior(self, word, tag):
-        t_w = self.emission_probability(word, tag)
-        if t_w == 0:
-            t_w = 0.000000001
-        w = find_prob(self.get_word_count(word), self.tagCount)
-        t = self.find_tag_prob(tag)
-        res = (t_w * w) / t
-        if res == 0:
-            print word, tag
-        return math.log(res)
-
     # Do the training!
     #
     def train(self, data):
