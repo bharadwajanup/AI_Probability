@@ -36,7 +36,7 @@ def draw_edge(image, y_coordinates, color, thickness):
 
 # main program
 #
-(input_filename, output_filename, gt_row, gt_col) = ('test_images/mountain.jpg','test_images/output.jpg', 33, 281)
+(input_filename, output_filename, gt_row, gt_col) = sys.argv[1:]
 
 # load in image
 input_image = Image.open(input_filename)
@@ -124,7 +124,7 @@ finalRidgeList = allPossibleRidges[-1][0]
 def drawRidge(rowNo, colNo):
     try:
         topRidgeVals = []
-        for i in range(rowNo - 10, rowNo + 10):
+        for i in range(rowNo - 9, rowNo + 10):
             topRidgeVals.append(
                 (i, formulaToCalculate(modifiedProbStrength[i][colNo + 1], len(modifiedProbStrength), abs(rowNo - i))
                  , modifiedProbStrength[i][colNo + 1]))
@@ -136,7 +136,7 @@ def drawRidge(rowNo, colNo):
 def drawRidgeNeg(rowNo, colNo):
     try:
         topRidgeVals = []
-        for i in range(rowNo - 10, rowNo + 10):
+        for i in range(rowNo - 9, rowNo + 10):
             topRidgeVals.append(
                 (i, formulaToCalculate(modifiedProbStrength[i][colNo - 1], len(modifiedProbStrength), abs(rowNo - i))
                  , modifiedProbStrength[i][colNo - 1]))
@@ -158,14 +158,18 @@ finalRidgeListUserDef.append(gt_row)
 probCounterUserDef.append(0)
 
 for i in range(gt_col+1, len(modifiedEdgeStrength[0])):
-    bestVal = bestReturnedVals(returnedVal)
-    returnedVal = drawRidge(bestVals[-1][0], i)
-    finalRidgeListUserDef.append(bestVals[-1][0])
-    probCounterUserDef.append(bestVals[-1][2])
+    if i == gt_col + 1:
+        returnedVal = drawRidge(gt_row, i)
+        best1Val = bestReturnedVals(returnedVal)
+    else:
+        best1Val = bestReturnedVals(returnedVal)
+        returnedVal = drawRidge(best1Val[-1][0], i)
+    finalRidgeListUserDef.append(best1Val[-1][0])
+    probCounterUserDef.append(best1Val[-1][2])
 
 
 # You'll need to add code here to figure out the results! For now,
 # just create a horizontal centered line.
-imsave(output_filename, draw_edge(input_image, row_index, (255, 0, 0), 5))
-imsave(output_filename, draw_edge(input_image, finalRidgeList, (0, 0, 255), 5))
-imsave(output_filename, draw_edge(input_image, finalRidgeListUserDef, (0, 255, 0), 5))
+imsave(output_filename, draw_edge(input_image, row_index, (255, 0, 0), 6))
+imsave(output_filename, draw_edge(input_image, finalRidgeList, (0, 0, 255), 4))
+imsave(output_filename, draw_edge(input_image, finalRidgeListUserDef, (0, 255, 0), 2))
